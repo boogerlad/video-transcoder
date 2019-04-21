@@ -834,13 +834,12 @@ public class MainActivity extends AppCompatActivity
         int fileNo = 0;
         String beginning = inputFilePath.substring(0, inputFilePath.lastIndexOf('.')) + "_";
         String end = "." + container.extension;
-        File destination = new File(beginning + fileNo + end);
+        File destination;
         
-        while (destination.exists())
+        do
         {
-            ++fileNo;
-            destination = new File(beginning + fileNo + end);
-        }
+            destination = new File(beginning + fileNo++ + end);
+        } while (destination.exists());
 
         int startTimeSec = rangeSeekBar.getSelectedMinValue().intValue();
         int endTimeSec = rangeSeekBar.getSelectedMaxValue().intValue();
