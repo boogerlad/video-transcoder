@@ -668,7 +668,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        if (container.supportedVideoCodecs.size() > 0)
+        if (container.supportedVideoCodecs.size() > 0 && videoCodec != VideoCodec.COPY)
         {
             // These options only apply when not using GIF
             if (videoCodec != VideoCodec.GIF)
@@ -691,13 +691,19 @@ public class MainActivity extends AppCompatActivity
             // Frame rate
             command.add("-r");
             command.add(fps);
-        } else
+        }
+        else if(videoCodec == VideoCodec.COPY)
+        {
+            command.add("-c:v");
+            command.add(videoCodec.ffmpegName);
+        }
+        else
         {
             // No video
             command.add("-vn");
         }
 
-        if (container.supportedAudioCodecs.size() > 0 && audioCodec != AudioCodec.NONE)
+        if (container.supportedAudioCodecs.size() > 0 && audioCodec != AudioCodec.NONE && audioCodec != AudioCodec.COPY)
         {
             // Audio codec
             command.add("-acodec");
@@ -716,6 +722,11 @@ public class MainActivity extends AppCompatActivity
             // Audio bitrate
             command.add("-b:a");
             command.add(audioBitrateK + "k");
+        }
+        else if(audioCodec == AudioCodec.COPY)
+        {
+            command.add("-c:a");
+            command.add(audioCodec.ffmpegName);
         }
         else
         {
@@ -819,37 +830,16 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        File outputDir;
-
-        if(container.supportedVideoCodecs.size() > 0)
-        {
-            outputDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
-        }
-        else
-        {
-            outputDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-        }
-
-        if(outputDir.exists() == false)
-        {
-            boolean result = outputDir.mkdirs();
-            if(result == false)
-            {
-                Log.w(TAG, "Unable to create destination dir: " + outputDir.getAbsolutePath());
-            }
-        }
-
-        String fileBaseName = videoInfo.getFileBaseName();
-
-        String extension = "." + container.extension;
         String inputFilePath = videoInfo.file.getAbsolutePath();
-
-        File destination = new File(outputDir, fileBaseName + extension);
         int fileNo = 0;
+        String beginning = inputFilePath.substring(0, inputFilePath.lastIndexOf('.')) + "_";
+        String end = "." + container.extension;
+        File destination = new File(beginning + fileNo + end);
+        
         while (destination.exists())
         {
-            fileNo++;
-            destination = new File(outputDir, fileBaseName + "_" + fileNo + extension);
+            ++fileNo;
+            destination = new File(beginning + fileNo + end);
         }
 
         int startTimeSec = rangeSeekBar.getSelectedMinValue().intValue();
@@ -1591,7 +1581,6 @@ public class MainActivity extends AppCompatActivity
 
             if(result)
             {
-                final Uri outputUri = FileProvider.getUriForFile(mainActivity, BuildConfig.APPLICATION_ID, new File(outputFile));
 
                 final CharSequence sendLabel = mainActivity.getResources().getText(R.string.sendLabel);
                 builder.setNeutralButton(sendLabel, new DialogInterface.OnClickListener()
@@ -1600,7 +1589,7 @@ public class MainActivity extends AppCompatActivity
                     public void onClick(DialogInterface dialog, int which)
                     {
                         Intent sendIntent = new Intent(Intent.ACTION_SEND);
-                        sendIntent.putExtra(Intent.EXTRA_STREAM, outputUri);
+                        sendIntent.putExtra(Intent.EXTRA_STREAM, outputFile);
                         sendIntent.setType(mimetype);
 
                         // set flag to give temporary permission to external app to use the FileProvider
