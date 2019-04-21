@@ -1544,6 +1544,7 @@ public class MainActivity extends AppCompatActivity
             if(result)
             {
                 message = mainActivity.getResources().getString(R.string.transcodeSuccess, outputFile);
+                new SingleMediaScanner(mainActivity, new File(outputFile));
             }
             else
             {
@@ -1577,27 +1578,6 @@ public class MainActivity extends AppCompatActivity
                         dialog.dismiss();
                     }
                 });
-
-            if(result)
-            {
-
-                final CharSequence sendLabel = mainActivity.getResources().getText(R.string.sendLabel);
-                builder.setNeutralButton(sendLabel, new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        Intent sendIntent = new Intent(Intent.ACTION_SEND);
-                        sendIntent.putExtra(Intent.EXTRA_STREAM, outputFile);
-                        sendIntent.setType(mimetype);
-
-                        // set flag to give temporary permission to external app to use the FileProvider
-                        sendIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-                        mainActivity.startActivity(Intent.createChooser(sendIntent, sendLabel));
-                    }
-                });
-            }
 
             builder.show();
 
