@@ -26,7 +26,7 @@ public enum VideoCodec
     MPEG1("mpeg1video", "MPEG-1", Collections.EMPTY_LIST, R.string.codecFastLow),
     VP8("libvpx", "VP8", Collections.EMPTY_LIST, null),
     VP9("libvpx-vp9", "VP9", Collections.EMPTY_LIST, null),
-    GIF("gif", "GIF", Collections.EMPTY_LIST, null),
+    GIF("gif", "GIF", Collections.EMPTY_LIST, null)
     ;
 
     public final String ffmpegName;

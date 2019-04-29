@@ -667,71 +667,72 @@ public class MainActivity extends AppCompatActivity
                 command.add(Integer.toString(subDurationSec));
             }
         }
-
-        if (container.supportedVideoCodecs.size() > 0 && videoCodec != VideoCodec.COPY)
-        {
-            // These options only apply when not using GIF
-            if (videoCodec != VideoCodec.GIF)
+        if(container.extension != "png") {
+            if (container.supportedVideoCodecs.size() > 0 && videoCodec != VideoCodec.COPY)
             {
-                // Video codec
-                command.add("-vcodec");
-                command.add(videoCodec.ffmpegName);
+                // These options only apply when not using GIF
+                if (videoCodec != VideoCodec.GIF)
+                {
+                    // Video codec
+                    command.add("-vcodec");
+                    command.add(videoCodec.ffmpegName);
 
-                // Video bitrate
-                command.add("-b:v");
-                command.add(videoBitrateK + "k");
+                    // Video bitrate
+                    command.add("-b:v");
+                    command.add(videoBitrateK + "k");
+                }
+
+                command.addAll(videoCodec.extraFfmpegArgs);
+
+                // Frame size
+                command.add("-s");
+                command.add(resolution);
+
+                // Frame rate
+                command.add("-r");
+                command.add(fps);
+            }
+            else if(videoCodec == VideoCodec.COPY)
+            {
+                command.add("-c:v");
+                command.add(videoCodec.ffmpegName);
+            }
+            else
+            {
+                // No video
+                command.add("-vn");
             }
 
-            command.addAll(videoCodec.extraFfmpegArgs);
+            if (container.supportedAudioCodecs.size() > 0 && audioCodec != AudioCodec.NONE && audioCodec != AudioCodec.COPY)
+            {
+                // Audio codec
+                command.add("-acodec");
+                command.add(audioCodec.ffmpegName);
 
-            // Frame size
-            command.add("-s");
-            command.add(resolution);
+                command.addAll(audioCodec.extraFfmpegArgs);
 
-            // Frame rate
-            command.add("-r");
-            command.add(fps);
-        }
-        else if(videoCodec == VideoCodec.COPY)
-        {
-            command.add("-c:v");
-            command.add(videoCodec.ffmpegName);
-        }
-        else
-        {
-            // No video
-            command.add("-vn");
-        }
+                // Sample rate
+                command.add("-ar");
+                command.add(Integer.toString(audioSampleRate));
 
-        if (container.supportedAudioCodecs.size() > 0 && audioCodec != AudioCodec.NONE && audioCodec != AudioCodec.COPY)
-        {
-            // Audio codec
-            command.add("-acodec");
-            command.add(audioCodec.ffmpegName);
+                // Channels
+                command.add("-ac");
+                command.add(audioChannel);
 
-            command.addAll(audioCodec.extraFfmpegArgs);
-
-            // Sample rate
-            command.add("-ar");
-            command.add(Integer.toString(audioSampleRate));
-
-            // Channels
-            command.add("-ac");
-            command.add(audioChannel);
-
-            // Audio bitrate
-            command.add("-b:a");
-            command.add(audioBitrateK + "k");
-        }
-        else if(audioCodec == AudioCodec.COPY)
-        {
-            command.add("-c:a");
-            command.add(audioCodec.ffmpegName);
-        }
-        else
-        {
-            // No audio
-            command.add("-an");
+                // Audio bitrate
+                command.add("-b:a");
+                command.add(audioBitrateK + "k");
+            }
+            else if(audioCodec == AudioCodec.COPY)
+            {
+                command.add("-c:a");
+                command.add(audioCodec.ffmpegName);
+            }
+            else
+            {
+                // No audio
+                command.add("-an");
+            }
         }
 
         // Output file
@@ -831,15 +832,26 @@ public class MainActivity extends AppCompatActivity
         }
 
         String inputFilePath = videoInfo.file.getAbsolutePath();
-        int fileNo = 0;
-        String beginning = inputFilePath.substring(0, inputFilePath.lastIndexOf('.')) + "_";
-        String end = "." + container.extension;
-        File destination;
-        
-        do
-        {
-            destination = new File(beginning + fileNo++ + end);
-        } while (destination.exists());
+        String d;
+        if(container.extension == "png") {
+            d = inputFilePath.substring(0, inputFilePath.lastIndexOf('.'));
+            File folder = new File(d);
+            if(!folder.exists() && !folder.mkdirs()) {
+                Log.w(TAG, "Unable to create destination dir: " + folder.getAbsolutePath());
+            }
+            d += "/%03d.png";
+        } else {
+            int fileNo = 0;
+            String beginning = inputFilePath.substring(0, inputFilePath.lastIndexOf('.')) + "_";
+            String end = "." + container.extension;
+            File destination;
+            
+            do
+            {
+                destination = new File(beginning + fileNo++ + end);
+            } while (destination.exists());
+            d = destination.getAbsolutePath();
+        }
 
         int startTimeSec = rangeSeekBar.getSelectedMinValue().intValue();
         int endTimeSec = rangeSeekBar.getSelectedMaxValue().intValue();
@@ -848,7 +860,7 @@ public class MainActivity extends AppCompatActivity
 
         startEncode(inputFilePath, startTimeSec, endTimeSec, durationSec, container, videoCodec,
                     videoBitrateK, resolution, fps, audioCodec, audioSampleRate, audioChannel,
-                    audioBitrateK, destination.getAbsolutePath());
+                    audioBitrateK, d);
     }
 
     private void updateUiForEncoding()
@@ -1524,7 +1536,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         private void showEncodeCompleteDialog(final MainActivity mainActivity, final boolean result,
-                                              final String ffmpegMessage, final String outputFile,
+                                              final String ffmpegMessage, String outputFile,
                                               final String mimetype)
         {
             Log.d(TAG, "Encode result: " + result);
@@ -1544,7 +1556,10 @@ public class MainActivity extends AppCompatActivity
             if(result)
             {
                 message = mainActivity.getResources().getString(R.string.transcodeSuccess, outputFile);
-                new SingleMediaScanner(mainActivity, new File(outputFile));
+                if(mimetype == "image/png") {
+                    outputFile = outputFile.replace("/%03d.png", "");
+                }
+                new SingleMediaScanner(mainActivity, outputFile, mimetype);
             }
             else
             {

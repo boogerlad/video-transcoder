@@ -19,11 +19,12 @@ public enum MediaContainer
     MP4("mp4", "mp4", "video/mp4", Arrays.asList(VideoCodec.COPY, VideoCodec.H264, VideoCodec.MPEG4, VideoCodec.MPEG2, VideoCodec.MPEG1), Arrays.asList(AudioCodec.COPY, AudioCodec.AAC, AudioCodec.MP3, AudioCodec.NONE)),
     WEBM("webm", "webm", "video/webm", Arrays.asList(VideoCodec.VP8, VideoCodec.VP9), Arrays.asList(AudioCodec.OPUS, AudioCodec.VORBIS, AudioCodec.NONE)),
     GIF("gif", "gif", "image/gif", Arrays.asList(VideoCodec.GIF), Collections.EMPTY_LIST),
+    PNG("png", "png", "image/png", Collections.EMPTY_LIST, Collections.EMPTY_LIST),
 
     // Audio only
     MP3("mp3", "mp3", "audio/mp3", new ArrayList<VideoCodec>(), Collections.singletonList(AudioCodec.MP3)),
     OGG("ogg", "ogg", "audio/ogg", new ArrayList<VideoCodec>(), Arrays.asList(AudioCodec.VORBIS)),
-    OPUS("opus", "opus", "audio/ogg", new ArrayList<VideoCodec>(), Arrays.asList(AudioCodec.OPUS)),
+    OPUS("opus", "opus", "audio/ogg", new ArrayList<VideoCodec>(), Arrays.asList(AudioCodec.OPUS))
     ;
 
     public final String ffmpegName;

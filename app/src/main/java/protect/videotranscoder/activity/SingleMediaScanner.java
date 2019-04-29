@@ -9,9 +9,11 @@ import android.net.Uri;
 public class SingleMediaScanner implements MediaScannerConnectionClient {
 
     private MediaScannerConnection mMs;
-    private File mFile;
+    private String mFile;
+    private String mime;
 
-    public SingleMediaScanner(Context context, File f) {
+    public SingleMediaScanner(Context context, String f, String mimeType) {
+        mime = mimeType;
         mFile = f;
         mMs = new MediaScannerConnection(context, this);
         mMs.connect();
@@ -19,7 +21,13 @@ public class SingleMediaScanner implements MediaScannerConnectionClient {
 
     @Override
     public void onMediaScannerConnected() {
-        mMs.scanFile(mFile.getAbsolutePath(), null);
+        if(mime == "image/png") {
+            for(File file : (new File(mFile)).listFiles()) {
+                mMs.scanFile(file.getAbsolutePath(), mime);
+            }
+        } else {
+            mMs.scanFile(mFile, mime);
+        }
     }
 
     @Override
